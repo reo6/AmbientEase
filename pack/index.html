@@ -8,8 +8,9 @@
 </head>
 <body>
     <div id="raw-html">
-        <a href="/"><h1>AmbientEase</h1></a>
-        <p>A simple and minimalist ambient noise generator for your room.</p>
+        <a href="/" class="link"><h3>AmbientEase</h3></a>
+        <h1 id="pack-title"></h1>
+        <p id="pack-description">A simple and minimalist ambient noise generator for your room.</p>
     </div>
 
     <div id="root"></div>
@@ -129,6 +130,8 @@
                         app = h('div', null, h(AudioPlayer, { baseURL: pack.url, channels: pack.channels }));
                         document.title = pack.title + " | AmbientEase"
                         document.documentElement.style.backgroundImage = `url('${pack.url}/${result[0].background}')`
+                        document.getElementById("pack-title").innerHTML = pack.title;
+                        document.getElementById("pack-description").innerHTML = pack.description;
                         muteSliders(true)
 
                     }
