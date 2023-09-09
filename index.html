@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AmbientEase</title>
+    <link rel="stylesheet" href="index.css"/>
+</head>
+<body>
+    <div>
+        <h1>AmbientEase</h1>
+        <p>A simple and minimalist ambient noise generator for your room.</p>
+    </div>
+
+    <div id="root"></div>
+    <div id="footer">
+        <p>Visit <a href="https://github.com/reo6/AmbientEase" target="_blank">GitHub</a>
+        | Submit your own packs.</p>
+        <p>Licensed under CC BY 4.0 unless stated otherwise by <a href="https://github.com/reo6/AmbientEase" target="_blank">the pack author</a>.</p>
+    </div>
+
+    <script type="module">
+        import { h, Component, render } from 'https://esm.sh/preact';
+
+        const URL = "https://raw.githubusercontent.com/reo6/ambientease-packs/main/index.json";
+
+        function Pack({ title, description, slug }) {
+            return h("div", {class: "pack"}, [
+                h("h3", null, title),
+                h("p", null, description),
+                h("a", {"href": "/pack?id="+slug}, "Go to the pack")
+            ])
+        }
+
+        fetch(URL)
+        .then(response => response.json())
+        .then(data => {
+            const packs = data.map(pack => {
+                return h(Pack, {
+                    title: pack.title,
+                    description: pack.description,
+                    slug: pack.slug
+                });
+            });
+            const app = h('div', {class: "pack-container"}, packs);
+            render(app, document.getElementById("root"));
+
+            let randombg = data[Math.floor(Math.random() * data.length)]
+            document.documentElement.style.backgroundImage = `url(${randombg.url}/${randombg.background})`;
+
+        })
+        .catch(error => {
+            console.error("Error fetching data:", error);
+        });
+      </script>
+</body>
+</html>

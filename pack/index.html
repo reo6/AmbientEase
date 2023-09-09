@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AmbientEase</title>
+    <link rel="stylesheet" href="pack.css" />
+</head>
+<body>
+    <div id="raw-html">
+        <a href="/"><h1>AmbientEase</h1></a>
+        <p>A simple and minimalist ambient noise generator for your room.</p>
+    </div>
+
+    <div id="root"></div>
+
+    <div id="footer">
+        <p>Visit <a class="link" href="https://github.com/reo6/AmbientEase" target="_blank">GitHub</a>
+        | Submit your own packs.</p>
+        <p>Licensed under CC BY 4.0 unless stated otherwise by <a class="link" href="https://github.com/reo6/AmbientEase" target="_blank">the pack author</a>.</p>
+    </div>
+
+    <script type="module">
+        import { h, Component, render } from 'https://esm.sh/preact';
+
+        const URL = "https://raw.githubusercontent.com/reo6/ambientease-packs/main/index.json";
+        const audioElements = [];
+        const volumes = [];
+
+        function muteSliders(muted) {
+            document.querySelectorAll(".slider").forEach(elem => {
+                if(muted) {
+                    elem.classList.add("mutedThumb")
+                    console.log('a')
+                } else {
+                    elem.classList.remove("mutedThumb")
+
+                }
+            })
+        }
+
+
+        
+        function AudioPlayer({ baseURL, channels }) {
+            channels.forEach(filename => {
+                const audio = new Audio(baseURL+`/${filename}`);
+                audioElements.push(audio);
+                volumes.push(Math.random()*0.5);
+                audio.addEventListener('ended', function() {
+                    this.currentTime = 0;
+                    this.play();
+                }, false);
+            })
+
+            
+            function handleVolumeChange(index, event) {
+                const newVolume = parseFloat(event.target.value);
+                volumes[index] = newVolume;
+                audioElements[index].volume = newVolume;
+            }
+
+            // const sliders = audioElements.map((_, index) => {
+            //     return h('div', {class: "slider"}, [
+            //         h('input', {
+            //             type: 'range',
+            //             min: '0',
+            //             max: '1',
+            //             step: '0.01',
+            //             // orient: 'vertical',
+            //             value: volumes[index],
+            //             onInput: event => handleVolumeChange(index, event)
+            //         })
+            //     ]);
+            // });
+
+
+            const sliders = audioElements.map((_, index) => {
+                return h('input', {
+                        type: 'range',
+                        min: '0',
+                        max: '1',
+                        step: '0.01',
+                        // orient: 'vertical',
+                        value: volumes[index],
+                        onInput: event => handleVolumeChange(index, event)
+                    })
+            });
+            var isPlaying = false;
+
+            function playAll() {
+                if(isPlaying){
+                    audioElements.forEach(audio => {
+                        audio.pause()
+                        audio.currentTime = 0;
+                    });
+                    isPlaying = false;
+                    muteSliders(false);
+                    return;
+                }
+                audioElements.forEach(audio => audio.play());
+                isPlaying = true;
+                muteSliders(true);
+
+            }
+
+            return h('div', null, [h('div', {class: "slider-container"}, sliders), h("button", {onClick: playAll, "class": "play-button"}, "Play")]);
+        }
+
+        const PackNotFound = h("h1", null, "Pack not found.");
+
+
+        fetch(URL)
+            .then(response => response.json())
+            .then(data => {
+
+                var ghIndex = data;
+                const queryParams = new URLSearchParams(window.location.search);
+                const packID = queryParams.get("id")
+                var app = PackNotFound;
+                if(!packID){
+                    app = PackNotFound;
+                } else {
+                    let result = ghIndex.filter(pack => pack.slug === packID);
+                    if(result.length === 0) {
+                        console.log("not found")
+                        app = PackNotFound;
+                    } else {
+                        let pack = result[0]
+                        app = h('div', null, h(AudioPlayer, { baseURL: pack.url, channels: pack.channels }));
+                        document.title = pack.title + " | AmbientEase"
+                        document.documentElement.style.backgroundImage = `url('${pack.url}/${result[0].background}')`
+                        muteSliders(true)
+
+                    }
+                }
+                render(app, document.getElementById("root"));
+            })
+            .catch(error => {
+                console.error("Error fetching data:", error);
+            });
+
+
+      </script>
+</body>
+</html>
